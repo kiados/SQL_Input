@@ -1,0 +1,72 @@
+Диалект - SQLite
+
+A) какую сумму в среднем в месяц тратит:
+    - пользователи в возрастном диапазоне от 18 до 25 лет включительно
+
+        SELECT round(AVG(average),2) FROM
+        (SELECT AVG(price) as average, strftime('%Y-%m',date) AS month
+        FROM
+        (SELECT i.price, p.userid, p.date FROM
+        items i, Purchases p
+        WHERE i.itemid=p.itemId
+        AND p.userid IN
+        (SELECT userid FROM Users WHERE age>=18 AND age<=25))
+        GROUP BY month)
+
+    - пользователи в возрастном диапазоне от 18 до 25 лет включительно
+
+        SELECT round(AVG(average),2) FROM
+        (SELECT AVG(price) as average, strftime('%Y-%m',date) AS month
+        FROM
+        (SELECT i.price, p.userid, p.date FROM
+        items i, Purchases p
+        WHERE i.itemid=p.itemId
+        AND p.userid IN
+        (SELECT userid FROM Users WHERE age>=26 AND age<=35))
+        GROUP BY month)
+
+Б) в каком месяце года выручка от пользователей в возрастном диапазоне 35+ самая большая
+
+        SELECT strftime('%Y-%m',date) AS month
+        FROM
+        (SELECT i.price, p.userid, p.date FROM
+        items i, Purchases p
+        WHERE i.itemid=p.itemId
+        AND p.userid IN
+        (SELECT userid FROM Users WHERE age>=26 AND age<=35))
+        GROUP BY month
+        ORDER BY SUM(price) DESC
+        LIMIT 1
+
+        Если речь не про конкретный месяц, а просто месяц года -
+
+        SELECT strftime('%m',date) AS month
+        FROM
+        (SELECT i.price, p.userid, p.date FROM
+        items i, Purchases p
+        WHERE i.itemid=p.itemId
+        AND p.userid IN
+        (SELECT userid FROM Users WHERE age>=26 AND age<=35))
+        GROUP BY month
+        ORDER BY SUM(price) DESC
+        LIMIT 1
+
+В) какой товар обеспечивает дает наибольший вклад в выручку за последний год
+
+    SELECT i.itemid
+    FROM Purchases p, Items i
+    WHERE p.itemId = i.itemid and strftime('%Y', date) = strftime('%Y', date())
+    GROUP BY i.itemid
+    ORDER BY SUM(i.price) DESC
+    LIMIT 1
+
+Г) топ-3 товаров по выручке и их доля в общей выручке за любой год
+
+    SELECT i.itemId, SUM(i.price) as summ, strftime('%Y', p.date) as year
+    FROM Purchases p, Items i
+    WHERE p.itemId = i.itemid
+    GROUP by i.itemId
+    ORDER BY summ DESC
+    LIMIT 3
+
+    Не сумел решить вывод "доли в общей выручке"
